@@ -1,0 +1,147 @@
+# Previsão de Propriedades ADMET em Potenciais Hits Terapêuticos
+
+**Curso:** IA nos Cuidados de Saúde — Perfil de Desenvolvimento
+**Modulo:** Projecto
+**Aluno:** Paulo Sérgio Marques Pereira e Matilde Santos
+**Professor:** Ricardo Saraiva
+
+---
+
+## Contexto e Motivação
+
+O processo de descoberta de fármacos é longo, complexo e dispendioso. A avaliação de propriedades **ADMET** (Absorção, Distribuição, Metabolismo, Excreção e Toxicidade) constitui um filtro crítico na transição de *hits* para *leads*, reduzindo drasticamente o número de candidatos viáveis. Os ensaios laboratoriais de ADMET são demorados e representam um dos principais gargalos do processo — daí o interesse crescente em ferramentas computacionais de previsão *in silico*.
+
+---
+
+## Objetivo
+
+Conceber um sistema de IA baseado numa **Directed Message Passing Neural Network (DMPNN) multitarefa**, capaz de prever simultaneamente propriedades ADMET a partir da estrutura química de compostos (formato SMILES), combinando duas tarefas de regressão e três de classificação binária.
+
+---
+
+## Datasets Utilizados
+
+Todos os datasets são carregados a partir do **Therapeutics Data Commons (TDC)** via `tdc.single_pred`.
+
+| Dataset | TDC Name | Propriedade | Tipo de Tarefa | Métrica |
+|---|---|---|---|---|
+| Caco-2 Wang | `ADME("Caco2_Wang")` | Permeabilidade intestinal (log) | Regressão | RMSE, MAE |
+| Clearance Hepatocyte AZ | `ADME("Clearance_Hepatocyte_AZ")` | Clearance hepática intrínseca | Regressão | RMSE, MAE |
+| BBB Martins | `ADME("BBB_Martins")` | Penetração na barreira hematoencefálica | Classificação binária | AUC-ROC |
+| CYP3A4 Veith | `ADME("CYP3A4_Veith")` | Inibição do CYP3A4 | Classificação binária | AUC-ROC |
+| hERG Karim | `Tox("hERG_Karim")` | Inibição do canal hERG (cardiotoxicidade) | Classificação binária | AUC-ROC |
+
+---
+
+## Arquitetura Proposta
+
+### Forward pass (inferência)
+
+```
+[SMILES] → BondMessagePassing → MeanAggregation → [mol_fingerprint: 300d]
+                                                        ↓
+                                          concat([mol_fingerprint, x_d]) → [309d]
+                                                     /           \
+                                         RegressionFFN           ClassificationFFN
+                                     (Caco2 + Clearance)     (BBB + CYP3A4 + hERG)
+                                         (2 outputs)             (3 outputs)
+```
+
+### Estratégia de treino multitarefa (um único modelo partilhado)
+
+```
+reg_train_loader ──┐
+cls_train_loader ──┴── CombinedLoader ──► MultiTaskADMETModel (único)
+                                                    │
+                                         BondMessagePassing (partilhado)
+                                         MeanAggregation    (partilhado)
+                                                    │
+                                          ┌─────────┴─────────┐
+                                    RegressionFFN       ClassificationFFN
+                                 (Caco2, Clearance)   (BBB, CYP3A4, hERG)
+```
+
+Os dois DataLoaders alimentam o **mesmo modelo**. Cada batch é identificado com o tipo de tarefa (`"regression"` ou `"classification"`); o encoder partilhado recebe gradientes de ambas as tarefas em simultâneo, beneficiando do sinal de aprendizagem multitarefa.
+
+1. **Entrada:** Representação SMILES convertida em grafos moleculares
+   (átomos como nós, ligações como arestas direcionadas).
+
+2. **Backbone partilhado:** Directed Message Passing Neural Network (D-MPNN),
+   responsável por aprender embeddings moleculares diretamente a partir
+   da estrutura do grafo, sem recorrer a fingerprints pré-calculados.
+
+3. **Enriquecimento:** Concatenação dos embeddings com 9 descritores moleculares
+   calculados via RDKit (MolWeight, LogP, TPSA, HBD, HBA, RotatableBonds,
+   Ring Count, FractionCSP3, Formal charge).
+
+4. **Heads independentes:**
+   - `RegressionFFN` (2 outputs): Caco-2 + Clearance
+   - `BinaryClassificationFFN` (3 outputs): BBB + CYP3A4 + hERG
+
+5. **Treino com Masking:** Máscara binária na função de perda para ignorar
+   rótulos ausentes (NaN), permitindo treino conjunto sobre datasets incompletos.
+
+---
+
+## Justificação da Abordagem Conexionista
+
+A relação entre estrutura molecular e propriedades ADMET é **não linear e altamente complexa**, tornando inadequadas as abordagens simbólicas baseadas em regras explícitas. A DMPNN aprende padrões diretamente dos dados, capta interdependências entre variáveis e generaliza para moléculas nunca observadas — vantagens determinantes face a métodos como SVM, Random Forest ou redes convolucionais que dependem de descritores pré-definidos.
+
+As principais limitações reconhecidas incluem: dependência da qualidade dos dados de treino, ausência de informação conformacional 3D, e o carácter de "caixa-negra" do modelo.
+
+---
+
+## Estado de Implementação
+
+| Passo | Descrição | Estado |
+|---|---|---|
+| 1 | Importação de bibliotecas | ✅ Concluído |
+| 2 | Carregamento dos datasets (TDC) | ✅ Concluído |
+| 3 | EDA + visualizações | ✅ Concluído |
+| 4 | Merge dos DataFrames + log1p(Clearance) | ✅ Concluído |
+| 5 | Canonicalização de SMILES + remoção de inválidos | ✅ Concluído |
+| 6 | Descritores RDKit (9 features) | ✅ Concluído |
+| 7 | Construção de `MoleculeDatapoint` | ✅ Concluído |
+| 8 | Scaffold-balanced split (80/10/10, seed=42) | ✅ Concluído |
+| 9 | Normalização de targets e descritores (x_d) | ✅ Concluído |
+| 10 | DataLoaders (6 total, batch_size=64) | ✅ Concluído |
+| 11 | Arquitetura `MultiTaskADMETModel` | ✅ Concluído |
+| 12 | Treino com `CombinedLoader` + PyTorch Lightning | ✅ Concluído |
+| 13 | Avaliação (RMSE/MAE + AUROC) | ✅ Concluído |
+| 14 | Métricas por época (torchmetrics + gráficos) | ✅ Concluído |
+| 15 | Célula de inferência (predict_admet) | ✅ Concluído |
+
+---
+
+## Validação
+
+- Divisão dos dados: **80% treino / 10% validação / 10% teste** (scaffold-balanced split)
+- Funções de perda: MSE (regressão), Binary Cross-Entropy (classificação)
+- Critério de aceitabilidade orientativo: AUC-ROC > 0,75 para classificação
+- O objetivo prioritário é a **capacidade de generalização**, não a precisão absoluta
+
+### Resultados no conjunto de teste (50 epochs, CPU)
+
+| Tarefa | Métrica | Resultado | Estado |
+|---|---|---|---|
+| Caco-2 | RMSE | 0.4895 | ✅ |
+| Caco-2 | MAE | 0.3835 | ✅ |
+| Clearance | RMSE | 1.2047 (espaço log1p) | ✅ |
+| Clearance | MAE | 0.9962 (espaço log1p) | ✅ |
+| BBB | AUC-ROC | 0.8777 | ✅ > 0.75 |
+| CYP3A4 | AUC-ROC | 0.8977 | ✅ > 0.75 |
+| hERG | AUC-ROC | 0.8499 | ✅ > 0.75 |
+
+---
+
+## Conclusão
+
+O sistema proposto tem potencial como ferramenta de apoio à triagem inicial de *hits* e otimização de *leads*, contribuindo para reduzir custos e priorizar compostos promissores antes dos ensaios *in vitro* e *in vivo*. Trabalho futuro poderá expandir o modelo com mais propriedades ADMET, representações 3D e técnicas de explicabilidade (XAI).
+
+---
+
+## Ferramentas publicadas que utilizam esta abordagem
+
+**LINK:** https://admetlab3.scbdd.com/
+
+![Imgur](https://i.imgur.com/WY9Jdl3.png)

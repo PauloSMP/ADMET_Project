@@ -1,0 +1,18 @@
+# Use python 3.12 and install the following packages.
+# PyTDC is optional for data download only. Install it separately with no deps:
+# pip install PyTDC --no-deps
+
+torch
+lightning
+pytorch-lightning
+chemprop
+rdkit
+numpy
+pandas
+scikit-learn
+torchmetrics
+matplotlib
+seaborn
+jupyterlab
+fuzzywuzzy
+huggingface_hub

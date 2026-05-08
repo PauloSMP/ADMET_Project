@@ -124,13 +124,45 @@ As principais limitações reconhecidas incluem: dependência da qualidade dos d
 
 | Tarefa | Métrica | Resultado | Estado |
 |---|---|---|---|
-| Caco-2 | RMSE | 0.4895 | ✅ |
-| Caco-2 | MAE | 0.3835 | ✅ |
-| Clearance | RMSE | 1.2047 (espaço log1p) | ✅ |
-| Clearance | MAE | 0.9962 (espaço log1p) | ✅ |
-| BBB | AUC-ROC | 0.8777 | ✅ > 0.75 |
-| CYP3A4 | AUC-ROC | 0.8977 | ✅ > 0.75 |
-| hERG | AUC-ROC | 0.8499 | ✅ > 0.75 |
+| Caco-2 | RMSE | 0.4885 | ✅ |
+| Caco-2 | MAE | 0.3981 | ✅ |
+| Clearance | RMSE | 1.2211 (espaço log1p) | ✅ |
+| Clearance | MAE | 1.0218 (espaço log1p) | ✅ |
+| BBB | AUC-ROC | 0.8686 | ✅ > 0.75 |
+| CYP3A4 | AUC-ROC | 0.8935 | ✅ > 0.75 |
+| hERG | AUC-ROC | 0.8487 | ✅ > 0.75 |
+
+### Discussão resultados
+
+**Classification (AUROC)**
+
+- BBB	    0.856	Good
+- CYP3A4	0.894	Very good
+- hERG	0.846	Good
+
+Published ADMET models on these same TDC benchmarks typically score 0.80-0.92
+
+**Regression (RMSE)**
+
+Caco2 - rmse	    0.4885	Good — target range is ~5 log units wide, so 0.4885 error is reasonable
+Clearance - rmse	1.2211	Harder task — Clearance is inherently noisier biologically and the distribution is wider
+Clearance is the weakest point, but it's consistently the hardest ADMET endpoint to predict across the literature.
+Even specialised models struggle with it.
+
+**Regression (MAE)**
+
+Caco2 - mae	    0.3981	log cm/s, range roughly -7.7 to -3.5 (~4.20 units wide) 
+                        Average error of 0.3981 log units → good
+Clearance - mae	1.0218	Target is log1p(μL/min/mg), range roughly 0 to 6 (~6 units wide)
+                        Average error of 1.0218 log units → acceptable but weaker
+
+**Notes:**
+- There is room for hyperparameter tunning to improve performance.
+- The current hyperparameters are all default values.
+- Only 50 epochs of training were done, which is relatively low for deep learning models. 
+- More epochs could improve performance.
+- Some endpoints have small dataset. 
+- We can also improve here.
 
 ---
 

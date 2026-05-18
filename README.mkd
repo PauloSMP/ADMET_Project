@@ -1,9 +1,12 @@
 # Previsão de Propriedades ADMET em Potenciais Hits Terapêuticos
 
 **Curso:** IA nos Cuidados de Saúde — Perfil de Desenvolvimento
-**Modulo:** Projecto
-**Aluno:** Paulo Sérgio Marques Pereira e Matilde Santos
-**Professor:** Ricardo Saraiva
+
+**Alunos:** Paulo Sérgio Marques Pereira e Matilde Santos
+
+**Professor:** Luís Gonçalo | **Modulo:** IA avançada
+
+**Professor:** Ricardo Saraiva | **Modulo:** Projecto
 
 ---
 

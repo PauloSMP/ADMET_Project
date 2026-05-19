@@ -12,7 +12,17 @@
 
 ## Contexto e Motivação
 
-O processo de descoberta de fármacos é longo, complexo e dispendioso. A avaliação de propriedades **ADMET** (Absorção, Distribuição, Metabolismo, Excreção e Toxicidade) constitui um filtro crítico na transição de *hits* para *leads*, reduzindo drasticamente o número de candidatos viáveis. Os ensaios laboratoriais de ADMET são demorados e representam um dos principais gargalos do processo — daí o interesse crescente em ferramentas computacionais de previsão *in silico*.
+O processo de descoberta de fármacos é longo, complexo e dispendioso. Estima-se que apenas 1 em cada 5000 moléculas candidatas chegue ao mercado — uma taxa de aprovação global de 5% a 10%. Um dos principais filtros neste processo é a avaliação das propriedades **ADMET**:
+
+| Componente | O que avalia |
+|---|---|
+| **Absorção** | Capacidade da molécula penetrar na corrente sanguínea |
+| **Distribuição** | Disseminação pelos tecidos, incluindo barreiras como a BBB |
+| **Metabolismo** | Biotransformação, mediada principalmente pelo CYP450 hepático |
+| **Excreção** | Eliminação do fármaco e metabolitos (via renal predominante) |
+| **Toxicidade** | Efeitos adversos e segurança global |
+
+Os ensaios laboratoriais de ADMET são demorados, exigem múltiplos protocolos experimentais e representam um dos principais gargalos do processo. Por este motivo, ferramentas computacionais de previsão *in silico*. O objectivo destas ferramentas é serem capazes de estimar as propriedades ADMET a partir da estrutura química da molécula e têm ganho crescente interesse como mecanismo de triagem precoce, reduzindo custos e priorizando candidatos com maior probabilidade de sucesso antes da validação experimental.
 
 ---
 

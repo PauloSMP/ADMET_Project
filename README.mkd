@@ -4,31 +4,35 @@
 
 **Alunos:** Paulo Sérgio Marques Pereira e Matilde Santos
 
-**Professor:** Luís Gonçalo | **Modulo:** IA avançada
+**Professor:** Luís Gonçalo | **Módulo:** IA Avançada
 
-**Professor:** Ricardo Saraiva | **Modulo:** Projecto
+**Professor:** Ricardo Saraiva | **Módulo:** Projeto
 
 ---
 
 ## Contexto e Motivação
 
-O processo de descoberta de fármacos é longo, complexo e dispendioso. Estima-se que apenas 1 em cada 5000 moléculas candidatas chegue ao mercado — uma taxa de aprovação global de 5% a 10%. Um dos principais filtros neste processo é a avaliação das propriedades **ADMET**:
+O processo de descoberta de novos fármacos é longo, complexo e dispendioso. Estima-se que apenas 1 em cada 5000 moléculas candidatas chegue ao mercado, traduzindo-es numa taxa de aprovação global de 5% a 10%. Um dos principais filtros neste processo é a avaliação das propriedades **ADMET**:
 
 | Componente | O que avalia |
 |---|---|
-| **Absorção** | Capacidade da molécula penetrar na corrente sanguínea |
-| **Distribuição** | Disseminação pelos tecidos, incluindo barreiras como a BBB |
-| **Metabolismo** | Biotransformação, mediada principalmente pelo CYP450 hepático |
-| **Excreção** | Eliminação do fármaco e metabolitos (via renal predominante) |
-| **Toxicidade** | Efeitos adversos e segurança global |
+| **Absorção** | Capacidade da molécula penetrar na corrente sanguínea a partir do local de administração |
+| **Distribuição** | Disseminação pelos tecidos do corpo, incluindo barreiras biológicas como a Barreira Hematoencefálica (BBB) |
+| **Metabolismo** | Biotransformação molecular, mediada principalmente pelas enzimas do Citocromo P450 (CYP450) hepático, com destaque para a isoforma CYP3A4 |
+| **Excreção** | Eliminação do fármaco e dos seus metabolitos do organismo, sendo a via renal (urina) a mais prevalente |
+| **Toxicidade** | Avaliação dos efeitos adversos e da segurança global do composto |
 
-Os ensaios laboratoriais de ADMET são demorados, exigem múltiplos protocolos experimentais e representam um dos principais gargalos do processo. Por este motivo, ferramentas computacionais de previsão *in silico*. O objectivo destas ferramentas é serem capazes de estimar as propriedades ADMET a partir da estrutura química da molécula e têm ganho crescente interesse como mecanismo de triagem precoce, reduzindo custos e priorizando candidatos com maior probabilidade de sucesso antes da validação experimental.
+Para compreender a aplicação prática destes conceitos, a morfina serve como modelo biológico exemplar. Quando administrada por via oral, é absorvida pela mucosa intestinal, distribui-se amplamente pelos tecidos e atravessa a barreira hematoencefálica, garantindo a chegada aos recetores opioides no cérebro e o efeito terapêutico de alívio da dor. É extensamente metabolizada no fígado e eliminada pela urina. A sua toxicidade advém sobretudo da ampla distribuição dos recetores opioides pelo organismo: quando a morfina alcança os pulmões, liga-se a recetores pulmonares e pode causar depressão cardiorrespiratória, colocando o doente em risco de paragem respiratória.
+
+Os ensaios laboratoriais (*in vitro* ou *in vivo*) de ADMET são demorados, exigem múltiplos protocolos experimentais distintos e representam um dos principais gargalos do processo de descoberta de fármacos. Existe por isso grande interesse em ferramentas computacionais *in silico* que permitam estimar previamente estas propriedades com base exclusivamente na estrutura química da molécula, com o maior grau de confiança possível.
+
+Neste contexto, minimizar os **falsos negativos** (moléculas com propriedades ADMET desfavoráveis incorretamente classificadas como seguras) é prioritário face à minimização dos falsos positivos. O custo de um falso negativo propaga-se ao longo de todo o pipeline de desenvolvimento, com perdas acumuladas de tempo e recursos. Um falso positivo representa, no limite, a rejeição de um candidato promissor numa biblioteca tipicamente vasta, com impacto comparativamente menor.
 
 ---
 
 ## Objetivo
 
-Conceber um sistema de IA baseado numa **Directed Message Passing Neural Network (DMPNN) multitarefa**, capaz de prever simultaneamente propriedades ADMET a partir da estrutura química de compostos (formato SMILES), combinando duas tarefas de regressão e três de classificação binária.
+Conceber um sistema de IA baseado numa **Directed Message Passing Neural Network (D-MPNN) multitarefa**, capaz de prever simultaneamente propriedades ADMET a partir da estrutura química de compostos (formato SMILES), combinando duas tarefas de regressão e três de classificação binária num único modelo partilhado.
 
 ---
 
@@ -76,29 +80,23 @@ cls_train_loader ──┴── CombinedLoader ──► MultiTaskADMETModel (�
 
 Os dois DataLoaders alimentam o **mesmo modelo**. Cada batch é identificado com o tipo de tarefa (`"regression"` ou `"classification"`); o encoder partilhado recebe gradientes de ambas as tarefas em simultâneo, beneficiando do sinal de aprendizagem multitarefa.
 
-1. **Entrada:** Representação SMILES convertida em grafos moleculares
-   (átomos como nós, ligações como arestas direcionadas).
+1. **Entrada:** Representação SMILES convertida em grafos moleculares (átomos como nós, ligações como arestas direcionadas).
 
-2. **Backbone partilhado:** Directed Message Passing Neural Network (D-MPNN),
-   responsável por aprender embeddings moleculares diretamente a partir
-   da estrutura do grafo, sem recorrer a fingerprints pré-calculados.
+2. **Backbone partilhado:** D-MPNN responsável por aprender embeddings moleculares diretamente a partir da estrutura do grafo, sem recorrer a fingerprints pré-calculados.
 
-3. **Enriquecimento:** Concatenação dos embeddings com 9 descritores moleculares
-   calculados via RDKit (MolWeight, LogP, TPSA, HBD, HBA, RotatableBonds,
-   Ring Count, FractionCSP3, Formal charge).
+3. **Enriquecimento:** Concatenação dos embeddings com 9 descritores moleculares calculados via RDKit (MolWeight, LogP, TPSA, HBD, HBA, RotatableBonds, RingCount, FractionCSP3, FormalCharge).
 
 4. **Heads independentes:**
    - `RegressionFFN` (2 outputs): Caco-2 + Clearance
-   - `BinaryClassificationFFN` (3 outputs): BBB + CYP3A4 + hERG
+   - `ClassificationFFN` (3 outputs): BBB + CYP3A4 + hERG
 
-5. **Treino com Masking:** Máscara binária na função de perda para ignorar
-   rótulos ausentes (NaN), permitindo treino conjunto sobre datasets incompletos.
+5. **Treino com Masking:** Máscara binária na função de perda para ignorar rótulos ausentes (NaN), permitindo treino conjunto sobre datasets incompletos.
 
 ---
 
 ## Justificação da Abordagem Conexionista
 
-A relação entre estrutura molecular e propriedades ADMET é **não linear e altamente complexa**, tornando inadequadas as abordagens simbólicas baseadas em regras explícitas. A DMPNN aprende padrões diretamente dos dados, capta interdependências entre variáveis e generaliza para moléculas nunca observadas — vantagens determinantes face a métodos como SVM, Random Forest ou redes convolucionais que dependem de descritores pré-definidos.
+A relação entre estrutura molecular e propriedades ADMET é **não linear e altamente complexa**, tornando inadequadas as abordagens simbólicas baseadas em regras explícitas. A D-MPNN aprende padrões diretamente dos dados, capta interdependências entre variáveis e generaliza para moléculas nunca observadas — vantagens determinantes face a métodos como SVM, Random Forest ou redes convolucionais que dependem de descritores pré-definidos.
 
 As principais limitações reconhecidas incluem: dependência da qualidade dos dados de treino, ausência de informação conformacional 3D, e o carácter de "caixa-negra" do modelo.
 
@@ -135,58 +133,43 @@ As principais limitações reconhecidas incluem: dependência da qualidade dos d
 
 ### Resultados no conjunto de teste (50 epochs, CPU)
 
-| Tarefa | Métrica | Resultado | Estado |
-|---|---|---|---|
-| Caco-2 | RMSE | 0.4885 | ✅ |
-| Caco-2 | MAE | 0.3981 | ✅ |
-| Clearance | RMSE | 1.2211 (espaço log1p) | ✅ |
-| Clearance | MAE | 1.0218 (espaço log1p) | ✅ |
-| BBB | AUC-ROC | 0.8686 | ✅ > 0.75 |
-| CYP3A4 | AUC-ROC | 0.8935 | ✅ > 0.75 |
-| hERG | AUC-ROC | 0.8487 | ✅ > 0.75 |
+| Tarefa | Métrica | Resultado | Referência (TDC) | Avaliação |
+|---|---|---|---|---|
+| Caco-2 | RMSE | 0.4885 | ~0.40–0.60 | ✅ Bom |
+| Caco-2 | MAE | 0.3981 | — | ✅ Bom |
+| Clearance | RMSE | 1.2211 (log1p) | Tarefa difícil na literatura | ✅ Aceitável |
+| Clearance | MAE | 1.0218 (log1p) | Tarefa difícil na literatura | ✅ Aceitável |
+| BBB | AUC-ROC | 0.8686 | 0.80–0.92 | ✅ Bom |
+| CYP3A4 | AUC-ROC | 0.8935 | 0.80–0.92 | ✅ Muito bom |
+| hERG | AUC-ROC | 0.8487 | 0.80–0.92 | ✅ Bom |
 
-### Discussão resultados
+### Discussão dos Resultados
 
-**Classification (AUROC)**
+**Classificação (AUC-ROC)**
 
-- BBB	    0.856	Good
-- CYP3A4	0.894	Very good
-- hERG	0.846	Good
+Todos os endpoints de classificação superaram o critério de aceitabilidade (AUC-ROC > 0.75), com resultados alinhados com os modelos de referência publicados para estes benchmarks TDC (0.80–0.92). O CYP3A4 apresentou o melhor desempenho (0.8935), seguido da BBB (0.8686) e do hERG (0.8487).
 
-Published ADMET models on these same TDC benchmarks typically score 0.80-0.92
+**Regressão (RMSE / MAE)**
 
-**Regression (RMSE)**
+O Caco-2 apresentou bom desempenho (RMSE = 0.4885; MAE = 0.3981 log cm/s), sendo a gama de valores alvo de aproximadamente 4.20 unidades log. A Clearance é o endpoint mais fraco (RMSE = 1.2211; MAE = 1.0218, espaço log1p). Os resultados sao consistentes com a literatura, onde mesmo modelos especializados apresentam dificuldades neste endpoint, dada a variabilidade biológica inerente e a distribuição alargada dos valores.
 
-Caco2 - rmse	    0.4885	Good — target range is ~5 log units wide, so 0.4885 error is reasonable
-Clearance - rmse	1.2211	Harder task — Clearance is inherently noisier biologically and the distribution is wider
-Clearance is the weakest point, but it's consistently the hardest ADMET endpoint to predict across the literature.
-Even specialised models struggle with it.
+**Notas para trabalho futuro**
 
-**Regression (MAE)**
-
-Caco2 - mae	    0.3981	log cm/s, range roughly -7.7 to -3.5 (~4.20 units wide) 
-                        Average error of 0.3981 log units → good
-Clearance - mae	1.0218	Target is log1p(μL/min/mg), range roughly 0 to 6 (~6 units wide)
-                        Average error of 1.0218 log units → acceptable but weaker
-
-**Notes:**
-- There is room for hyperparameter tunning to improve performance.
-- The current hyperparameters are all default values.
-- Only 50 epochs of training were done, which is relatively low for deep learning models. 
-- More epochs could improve performance.
-- Some endpoints have small dataset. 
-- We can also improve here.
+- Os hiperparâmetros utilizados são todos valores por defeito — otimização pode melhorar o desempenho.
+- Apenas 50 epochs de treino foram realizadas — treino mais longo com early stopping poderá beneficiar o modelo.
+- Alguns endpoints têm datasets de dimensão reduzida, potencialmente utilizar data augmentation ou transfer learning podem ser explorados para melhorar o modelo.
+- Acrescentar mais endpoints ADMET é imprescindível para haver verdadeiro potencial de aplicação prática. Adicionalmente como o encoder é partilhado, tem também potencial de melhorar a performance do modelo.
 
 ---
 
 ## Conclusão
 
-O sistema proposto tem potencial como ferramenta de apoio à triagem inicial de *hits* e otimização de *leads*, contribuindo para reduzir custos e priorizar compostos promissores antes dos ensaios *in vitro* e *in vivo*. Trabalho futuro poderá expandir o modelo com mais propriedades ADMET, representações 3D e técnicas de explicabilidade (XAI).
+O sistema proposto tem potencial como ferramenta de apoio à triagem inicial de *hits* e otimização de *leads*, contribuindo para reduzir custos e priorizar compostos promissores antes dos ensaios *in vitro* e *in vivo*. Trata-se de uma prova de conceito que valida a viabilidade da abordagem D-MPNN para previsão multitarefa de propriedades ADMET. Trabalho futuro poderá expandir o modelo com mais endpoints ADMET, representações 3D e técnicas de explicabilidade (XAI).
 
 ---
 
-## Ferramentas publicadas que utilizam esta abordagem
+## Ferramentas Publicadas com Abordagem Semelhante
 
-**LINK:** https://admetlab3.scbdd.com/
+**ADMETlab 3.0:** https://admetlab3.scbdd.com/
 
-![Imgur](https://i.imgur.com/WY9Jdl3.png)
+![ADMETlab 3.0](https://i.imgur.com/WY9Jdl3.png)

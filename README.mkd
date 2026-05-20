@@ -133,25 +133,31 @@ As principais limitações reconhecidas incluem: dependência da qualidade dos d
 
 ### Resultados no conjunto de teste (50 epochs, CPU)
 
-| Tarefa | Métrica | Resultado | Referência (TDC) | Avaliação |
-|---|---|---|---|---|
-| Caco-2 | RMSE | 0.4885 | ~0.40–0.60 | ✅ Bom |
-| Caco-2 | MAE | 0.3981 | — | ✅ Bom |
-| Clearance | RMSE | 1.2211 (log1p) | Tarefa difícil na literatura | ✅ Aceitável |
-| Clearance | MAE | 1.0218 (log1p) | Tarefa difícil na literatura | ✅ Aceitável |
-| BBB | AUC-ROC | 0.8686 | 0.80–0.92 | ✅ Bom |
-| CYP3A4 | AUC-ROC | 0.8935 | 0.80–0.92 | ✅ Muito bom |
-| hERG | AUC-ROC | 0.8487 | 0.80–0.92 | ✅ Bom |
+> **Versão atual: v3** — todos os endpoints melhoraram face à versão anterior (v2).
+
+| Tarefa | Métrica | v2 | **v3 (atual)** | Referência (TDC) | Avaliação |
+|---|---|---|---|---|---|
+| Caco-2 | RMSE | 0.4885 | **0.4560** | ~0.40–0.60 | ✅ Bom |
+| Caco-2 | MAE | 0.3981 | **0.3610** | — | ✅ Bom |
+| Clearance | RMSE | 1.2211 (log1p) | **1.1914** (log1p) | Tarefa difícil na literatura | ✅ Aceitável |
+| Clearance | MAE | 1.0218 (log1p) | **0.9870** (log1p) | Tarefa difícil na literatura | ✅ Aceitável |
+| BBB | AUC-ROC | 0.8686 | **0.8693** | 0.80–0.92 | ✅ Bom |
+| CYP3A4 | AUC-ROC | 0.8935 | **0.9050** | 0.80–0.92 | ✅ Muito bom |
+| hERG | AUC-ROC | 0.8487 | **0.8510** | 0.80–0.92 | ✅ Bom |
 
 ### Discussão dos Resultados
 
 **Classificação (AUC-ROC)**
 
-Todos os endpoints de classificação superaram o critério de aceitabilidade (AUC-ROC > 0.75), com resultados alinhados com os modelos de referência publicados para estes benchmarks TDC (0.80–0.92). O CYP3A4 apresentou o melhor desempenho (0.8935), seguido da BBB (0.8686) e do hERG (0.8487).
+Todos os endpoints de classificação superaram o critério de aceitabilidade (AUC-ROC > 0.75), com resultados alinhados com os modelos de referência publicados para estes benchmarks TDC (0.80–0.92). O CYP3A4 apresentou o melhor desempenho (0.9050), seguido da BBB (0.8693) e do hERG (0.8510). Face à versão anterior, o CYP3A4 registou a melhoria mais expressiva (+0.0115 AUC-ROC).
 
 **Regressão (RMSE / MAE)**
 
-O Caco-2 apresentou bom desempenho (RMSE = 0.4885; MAE = 0.3981 log cm/s), sendo a gama de valores alvo de aproximadamente 4.20 unidades log. A Clearance é o endpoint mais fraco (RMSE = 1.2211; MAE = 1.0218, espaço log1p). Os resultados sao consistentes com a literatura, onde mesmo modelos especializados apresentam dificuldades neste endpoint, dada a variabilidade biológica inerente e a distribuição alargada dos valores.
+O Caco-2 continua a apresentar bom desempenho (RMSE = 0.4560; MAE = 0.3610 log cm/s), com melhoria assinalável face à versão anterior (−0.0325 RMSE; −0.0371 MAE). A Clearance melhorou igualmente (RMSE = 1.1914; MAE = 0.9870, espaço log1p), com a MAE a descer abaixo de 1.0 pela primeira vez. A Clearance mantém-se o endpoint mais exigente — comportamento consistente com a literatura, onde mesmo modelos especializados apresentam dificuldades neste endpoint, dada a variabilidade biológica inerente e a distribuição alargada dos valores.
+
+**Análise do comportamento de treino (v3)**
+
+Os gráficos de treino evidenciam um padrão característico de modelos multitarefa: a *training loss* total desce de ~1.5 para ~0.7 ao longo de 50 epochs, mas o RMSE de regressão estabiliza relativamente cedo. Este comportamento resulta da natureza multitarefa do modelo — a descida da *loss* total é parcialmente impulsionada pela melhoria das tarefas de classificação (onde o sinal de gradiente é mais forte), enquanto os endpoints de regressão progridem de forma mais gradual, limitados pela variabilidade experimental intrínseca dos dados biológicos (ruído aleatório irredutível).
 
 **Notas para trabalho futuro**
 

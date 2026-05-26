@@ -38,6 +38,12 @@ Conceber um sistema de IA baseado numa **Directed Message Passing Neural Network
 
 ## Datasets Utilizados
 
+### Datasets
+
+- [ADME – TDC](https://tdcommons.ai/single_pred_tasks/adme/)
+- [Tox – TDC](https://tdcommons.ai/single_pred_tasks/tox/)
+
+
 Todos os datasets são carregados a partir do **Therapeutics Data Commons (TDC)** via `tdc.single_pred`.
 
 | Dataset | TDC Name | Propriedade | Tipo de Tarefa | Métrica |
@@ -47,6 +53,12 @@ Todos os datasets são carregados a partir do **Therapeutics Data Commons (TDC)*
 | BBB Martins | `ADME("BBB_Martins")` | Penetração na barreira hematoencefálica | Classificação binária | AUC-ROC |
 | CYP3A4 Veith | `ADME("CYP3A4_Veith")` | Inibição do CYP3A4 | Classificação binária | AUC-ROC |
 | hERG Karim | `Tox("hERG_Karim")` | Inibição do canal hERG (cardiotoxicidade) | Classificação binária | AUC-ROC |
+
+- **Caco-2 Wang:** A highest value of Caco-2 means that the compound is more permeable to the intestine.
+- **Clearance Hepatocyte AZ:** Clearance is the rate of elimination of a compound by the liver. The higher the value, the higher rate of elimination.
+- **BBB Martins:** BBB classified as 0 (BBB - non-penetrated) or 1 (BBB - penetrated).
+- **CYP3A4 Veith:** CYP3A4 classified as 0 (non-inhibited) or 1 (Inhibitor of CYP3A4 - inhibited).
+- **hERG Karim:** hERG classified as 0 (Non-Blocker - Channel non-inhibited) or 1 (Blocker - Chanel inhibited).
 
 ---
 

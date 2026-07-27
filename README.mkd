@@ -40,6 +40,18 @@ Conceber um sistema de IA baseado numa **Directed Message Passing Neural Network
 
 ### Datasets
 
+### Licença e Dados
+
+[#licença-e-dados](#licença-e-dados)
+
+O código deste repositório está licenciado sob a licença MIT (ver [LICENSE](LICENSE)).
+
+Os datasets utilizados (Caco2_Wang, Clearance_Hepatocyte_AZ, BBB_Martins,
+CYP3A4_Veith, hERG_Karim) são disponibilizados através do
+[Therapeutics Data Commons](https://tdcommons.ai/) e mantêm as licenças
+e termos de uso definidos pelos respetivos curadores originais. A licença
+MIT deste repositório aplica-se apenas ao código, não aos dados.
+
 - [ADME – TDC](https://tdcommons.ai/single_pred_tasks/adme/)
 - [Tox – TDC](https://tdcommons.ai/single_pred_tasks/tox/)
 

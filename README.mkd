@@ -190,7 +190,7 @@ O sistema proposto tem potencial como ferramenta de apoio à triagem inicial de 
 
 ---
 
-## Ferramentas Publicadas com Abordagem Semelhante
+## Ferramentas públicas que serviram de inspiração para este projecto.
 
 **ADMETlab 3.0:** https://admetlab3.scbdd.com/
 

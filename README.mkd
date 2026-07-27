@@ -2,7 +2,7 @@
 
 **Curso:** IA nos Cuidados de Saúde — Perfil de Desenvolvimento
 
-**Alunos:** Paulo Sérgio Marques Pereira e Matilde Santos
+**Aluno:** Paulo Sérgio Marques Pereira
 
 **Professor:** Luís Gonçalo | **Módulo:** IA Avançada
 

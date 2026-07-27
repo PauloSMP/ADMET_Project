@@ -38,9 +38,7 @@ Conceber um sistema de IA baseado numa **Directed Message Passing Neural Network
 
 ## Datasets Utilizados
 
-### Datasets
-
-### Licença e Dados
+### License and Datasets
 
 [#licença-e-dados](#licença-e-dados)
 
